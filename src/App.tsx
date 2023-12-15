@@ -1,9 +1,9 @@
-import { FC, useEffect, useRef, useState } from "react";
-import * as poseDetection from "@tensorflow-models/pose-detection";
-import * as tf from "@tensorflow/tfjs";
-import "@tensorflow/tfjs-backend-webgpu";
+import { FC, useEffect, useRef, useState } from 'react';
+import * as poseDetection from '@tensorflow-models/pose-detection';
+import * as tf from '@tensorflow/tfjs';
+import '@tensorflow/tfjs-backend-webgpu';
 
-import style from "./App.module.scss";
+import style from './App.module.scss';
 
 const MODEL = poseDetection.SupportedModels.MoveNet;
 
@@ -20,7 +20,7 @@ const drawPoints = (
 
     canvas.beginPath();
     canvas.arc(x, y, 5, 0, 2 * Math.PI);
-    canvas.fillStyle = "pink";
+    canvas.fillStyle = 'pink';
     canvas.fill();
   });
 };
@@ -37,7 +37,7 @@ const drawLine = (
   canvas.beginPath();
   canvas.moveTo(p1.x, p1.y);
   canvas.lineTo(p2.x, p2.y);
-  canvas.strokeStyle = "red";
+  canvas.strokeStyle = 'blue';
   canvas.stroke();
 };
 
@@ -75,13 +75,13 @@ const App: FC = () => {
 
   useEffect(() => {
     if (canvasRef.current) {
-      setCanvasCtx(canvasRef.current.getContext("2d"));
+      setCanvasCtx(canvasRef.current.getContext('2d'));
     }
   }, []);
 
   useEffect(() => {
     tf.ready().then(() => {
-      console.log("tfjs ready");
+      console.log('tfjs ready');
     });
   }, []);
 
@@ -117,9 +117,10 @@ const App: FC = () => {
           videoRef.current!.width,
           videoRef.current!.height
         );
-
-        draw17Lines(poses[0].keypoints, canvasCtx);
-        drawPoints(poses[0].keypoints, canvasCtx);
+        if (poses?.[0]?.keypoints) {
+          draw17Lines(poses[0].keypoints, canvasCtx);
+          drawPoints(poses[0].keypoints, canvasCtx);
+        }
       };
 
       interval = setInterval(() => {
@@ -134,7 +135,10 @@ const App: FC = () => {
 
   useEffect(() => {
     const constraints: MediaStreamConstraints = {
-      video: true,
+      video: {
+        width: 640,
+        height: 640,
+      },
     };
 
     let stream: MediaStream | null = null;
@@ -149,6 +153,8 @@ const App: FC = () => {
           videoRef.current.height = str
             .getVideoTracks()[0]
             .getSettings().height!;
+
+          console.log(str.getVideoTracks()[0].getSettings());
         } else {
           str.getTracks().forEach((track) => {
             track.stop();
@@ -157,7 +163,7 @@ const App: FC = () => {
       })
       .catch((err) => {
         // eslint-disable-next-line no-console
-        console.error("Error accessing the camera:", err);
+        console.error('Error accessing the camera:', err);
       });
 
     return () => {
@@ -172,14 +178,14 @@ const App: FC = () => {
 
   return (
     <div>
-      <video className={style.video} ref={videoRef} autoPlay playsInline>
+      <video className={style.video} ref={videoRef} autoPlay playsInline muted>
         <track kind="captions" />
       </video>
       <canvas
         className={style.canvas}
         ref={canvasRef}
         width="640"
-        height="480"
+        height="640"
       />
     </div>
   );

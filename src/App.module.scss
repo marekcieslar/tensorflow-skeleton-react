@@ -1,9 +1,15 @@
 .video {
   transform: scaleX(-1);
+  width: 100vw;
+  height: auto;
+  max-width: 640px;
+  object-fit: contain;
 }
 
 .canvas {
   transform: scaleX(-1);
+  width: 100vw;
+  max-width: 640px;
   position: absolute;
   top: 0;
   left: 0;
