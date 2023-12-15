@@ -1,11 +1,19 @@
 import { FC, useEffect, useRef, useState } from 'react';
+import * as poseDetection from '@tensorflow-models/pose-detection';
+import * as tf from '@tensorflow/tfjs';
+import '@tensorflow/tfjs-backend-webgpu';
 
 import style from './App.module.scss';
+
+const MODEL = poseDetection.SupportedModels.MoveNet;
 
 const App: FC = () => {
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [canvasCtx, setCanvasCtx] = useState<CanvasRenderingContext2D | null>(
+    null
+  );
+  const [detector, setDetector] = useState<poseDetection.PoseDetector | null>(
     null
   );
 
@@ -15,13 +23,56 @@ const App: FC = () => {
     }
   }, []);
 
-  if (canvasCtx) {
-    // draw a red rectangle
-    canvasCtx.fillStyle = 'rgb(200, 0, 0)';
-    canvasCtx.fillRect(10, 10, 50, 50);
-  }
+  useEffect(() => {
+    tf.ready().then(() => {
+      console.log('tfjs ready');
+    });
+  }, []);
 
-  console.log('canvasCtx', canvasCtx);
+  // set up detector
+  useEffect(() => {
+    if (canvasCtx) {
+      poseDetection
+        .createDetector(MODEL, {
+          // modelType: poseDetection.movenet.modelType.SINGLEPOSE_LIGHTNING,
+        })
+        .then((det) => {
+          setDetector(det);
+        });
+    }
+  }, [canvasCtx]);
+
+  // start detection
+  useEffect(() => {
+    if (detector && videoRef.current && canvasCtx) {
+      const detect = async () => {
+        console.log('videoRef.current', videoRef.current);
+        // TODO: here is the issue
+        const poses = await detector.estimatePoses(videoRef.current, {
+          maxPoses: 1,
+          flipHorizontal: false,
+          scoreThreshold: 0.4,
+        });
+
+        console.log('poses', JSON.stringify(poses, null, 2));
+
+        // poses.forEach((pose) => {
+        //   pose.keypoints.forEach((keypoint) => {
+        //     console.log(keypoint);
+        //     // const { x, y } = keypoint.position;
+        //     // canvasCtx.beginPath();
+        //     // canvasCtx.arc(x, y, 5, 0, 2 * Math.PI);
+        //     // canvasCtx.fillStyle = 'red';
+        //     // canvasCtx.fill();
+        //   });
+        // });
+
+        // requestAnimationFrame(detect);
+      };
+
+      detect();
+    }
+  }, [detector, videoRef, canvasCtx]);
 
   useEffect(() => {
     const constraints: MediaStreamConstraints = {
