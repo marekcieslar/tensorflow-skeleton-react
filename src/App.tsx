@@ -1,9 +1,27 @@
-import { FC, useEffect, useRef } from 'react';
+import { FC, useEffect, useRef, useState } from 'react';
 
 import style from './App.module.scss';
 
 const App: FC = () => {
   const videoRef = useRef<HTMLVideoElement>(null);
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const [canvasCtx, setCanvasCtx] = useState<CanvasRenderingContext2D | null>(
+    null
+  );
+
+  useEffect(() => {
+    if (canvasRef.current) {
+      setCanvasCtx(canvasRef.current.getContext('2d'));
+    }
+  }, []);
+
+  if (canvasCtx) {
+    // draw a red rectangle
+    canvasCtx.fillStyle = 'rgb(200, 0, 0)';
+    canvasCtx.fillRect(10, 10, 50, 50);
+  }
+
+  console.log('canvasCtx', canvasCtx);
 
   useEffect(() => {
     const constraints: MediaStreamConstraints = {
@@ -44,6 +62,12 @@ const App: FC = () => {
       <video className={style.video} ref={videoRef} autoPlay playsInline>
         <track kind="captions" />
       </video>
+      <canvas
+        className={style.canvas}
+        ref={canvasRef}
+        width="640"
+        height="480"
+      />
     </div>
   );
 };
